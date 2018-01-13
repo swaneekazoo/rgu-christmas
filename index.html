@@ -1,0 +1,780 @@
+<html>
+<head>
+	<title>Merry Christmas!</title>
+	<script type = "text/javascript" src = "objects/tree.js"></script>
+	<script type = "text/javascript" src = "objects/snowflake.js"></script>
+	<script type = "text/javascript" src = "objects/snowman.js"></script>
+	<script type = "text/javascript" src = "objects/house.js"></script>
+	<script type = "text/javascript" src = "objects/text/salutation.js"></script>
+	<script type = "text/javascript" src = "objects/text/instruction.js"></script>
+	<script type = "text/javascript" src = "objects/text/speech.js"></script>
+	<script type = "text/javascript" src = "objects/snowball.js"></script>
+	<script type = "text/javascript" src = "objects/death.js"></script>
+	<script type = "text/javascript" src = "objects/car.js"></script>
+	<script type = "text/javascript" src = "objects/light.js"></script>
+	
+</head>
+<body>
+
+	<canvas
+	style="border:1px solid #000040;"
+	id = "mycanvas"
+	width = "500"
+	height = "500">
+
+	Your browser does not support canvas
+</canvas>
+
+<script>
+window.addEventListener("load", myApp, false);
+
+function myApp() {
+	var canvas;
+	var context;
+	
+	//Global variables
+	
+	//Sound
+	ambience = new Audio("audio/ambience.wav");
+	doorSound = new Audio("audio/door.wav");
+	music = new Audio("audio/music.wav");
+	footsteps = new Audio("audio/footsteps.wav");
+	snowballSound = new Audio("audio/snowball.ogg");
+	deathSound = new Audio("audio/death.wav");
+	journalist = new Audio("audio/journalist.wav");
+	nightMusic = new Audio("audio/music-night.mp3");
+	carDoor = new Audio("audio/car-open.wav");
+	policeFootsteps = new Audio("audio/footsteps-police.wav");
+	engineSound = new Audio("audio/car-drive.wav");
+	radio = new Audio("audio/radio.wav");
+	
+	//Event handling
+	var night = false;
+	var doorReady = false;
+	var snowmanReady = false;
+	var door = false;
+	var doorClosed = false;
+	var snowman = false;
+	var dead = false;
+	var snowMotion = false;
+	var cue1 = false;
+	var cue2 = false;
+	var cue3 = false;
+	var cue4 = false;
+	var engine = false;
+	var drive = false;
+	var foreLights = false;
+	var midLights = false;
+	var backLights = false;
+	var fin = false;
+	var signed = false;
+
+	function getCanvas() {
+		var tmp;
+
+		tmp = document.getElementById ("mycanvas");
+
+		if (tmp == null) {
+			alert ("no canvas");
+		}
+
+		return tmp;
+
+	}
+	
+	//ANIMATION
+
+	function animateMe() {
+	
+		context.clearRect (0, 0, canvas.width, canvas.height);
+		
+		horizon = canvas.height - 50;
+		
+		//Drawing scenery
+		
+		sceneDraw();
+		
+		function sceneDraw() {
+		
+			img = new Image();
+			
+			//Scenery considerably differs based on the time of day ("night" variable)
+		
+			if (night == false) {
+			
+				context.fillStyle = "#000040";
+				img.src = "img/scene/hills.png";
+				
+			}
+			
+			else {
+			
+				context.fillStyle = "black";
+				img.src = "img/scene/night.png";
+				
+			}
+			
+			context.drawImage (img, 0, 0, 500, 450);
+			context.fillRect(0, horizon, canvas.width, 50);
+			
+		}
+
+		//Drawing Trees
+		
+		if (night == false) {
+
+			treeDraw();
+			
+		}
+
+		function treeDraw() {
+
+			var count;
+
+			//Background
+
+			for (count = 0; count < 8; count++) {
+
+				backTree = backTrees[count];
+
+				backTree.draw(context);
+
+			}
+
+			//Foreground
+
+			for (count = 0; count < 4; count++) {
+
+				foreTree = foreTrees[count];
+
+				foreTree.draw(context);
+
+			}
+
+		}
+		
+		//Drawing Lights (Background)
+		
+		if (backLights == true) {
+		
+			midLights = false;
+			backLight.draw(context);
+			setTimeout(function() {
+			
+				foreLights = true;
+			
+			}, 714);
+			
+		}
+		
+		//Drawing Lights (Middle)
+		
+		if (midLights == true) {
+		
+			foreLights = false;
+			midLight.draw(context);
+			setTimeout(function() {
+			
+				backLights = true;
+				
+			}, 714);
+			
+		}
+		
+		//Drawing House
+		
+		houseDraw();
+		
+		function houseDraw() {
+			
+			house.draw(context);
+			
+		}
+		
+		//When the door is clicked (door = true), it opens for 2 seconds before closing again (doorClosed = true)
+		
+		if (door == true && doorClosed == false) {
+		
+			house.doorOpen();
+			
+		}
+		
+		else {
+		
+			house.doorClose();
+			
+		}
+		
+		if (night == true) {
+		
+			house.night();
+			
+		}
+		
+		//Drawing Snowmen
+		
+		//Snowmen only draw when the door is clicked, but continue to be drawn after it is closed (snowMotion = true)
+		
+		if (snowMotion == true && night == false) {
+		
+			snowmanDraw();
+			
+		}
+			
+		function snowmanDraw() {
+			
+			parent.draw(context);
+			parent.action(canvas);
+			
+			child.draw(context);
+			child.action(canvas);
+		
+		}
+		
+		//The "police" snowman is drawn as the second line of press dialogue is drawn
+		
+		if (cue4 == true) {
+		
+			police.simpleAction(context, canvas);
+			policeFootsteps.play();
+			
+		}
+		
+		//Drawing Snowflakes
+		
+		if (night == false) {
+		
+			snowflakeDraw();
+			
+		}
+
+		function snowflakeDraw() {
+
+			var count;
+
+			for (count = 0; count < 9; count++) {
+
+				flake = flakes[count];
+
+				flake.draw(context);
+				flake.action(canvas);
+
+			}
+
+		}
+		
+		//Drawing Snowball
+		
+		if (snowman == true) {
+		
+			snowballDraw();
+			
+		}
+		
+		function snowballDraw() {
+		
+			ball.draw(context);
+			ball.action();
+			
+		}
+		
+		//Drawing death scene
+		
+		if (dead == true && night == false) {
+		
+		deathDraw();
+		
+		}
+		
+		function deathDraw() {
+		
+			if (dead == true && night == false) {
+			
+				death.draw(context);
+				
+			}
+			
+		}
+		
+		//Drawing vehicles
+		
+		if (night == true) {
+		
+		vehicleDraw();
+		
+		}
+			
+		function vehicleDraw() {
+		
+			//Ambulance
+			
+			img = new Image;
+			img.src = "img/vehicle/ambulance.png";
+			
+			context.drawImage(img, 372, 322, 128, 128);
+			
+			//Car
+			
+			car.draw(context);
+			
+			if (engine == true) {
+		
+				setTimeout(function() {
+				
+					radio.play();
+					drive = true;
+					
+				}, 5000);
+			
+			}
+			
+			if (drive == true) {
+			
+				car.drive();
+				engine = false;
+				setTimeout(function() {
+				
+					fin = true;
+					drive = false;
+					
+				}, 4000);
+				
+			}
+				
+		}
+		
+		//Drawing Lights (Foreground)
+		
+		if (foreLights == true) {
+		
+			backLights = false;
+			foreLight.draw(context);
+			setTimeout(function() {
+			
+				midLights = true;
+				
+			}, 714);
+			
+		}
+		
+		//Drawing Text
+		
+		textDraw();
+		
+		function textDraw() {
+		
+			//Initial salutation is drawn immediately
+			//After it exits, the door click event is armed
+		
+			if (door == false && doorClosed == false) {
+		
+				to.slide(context);
+				setTimeout(function(){
+				
+					doorReady = true;
+				
+				}, 4000);
+				
+			}
+			
+			//Draws instruction to click door
+			
+			if (doorReady == true && door == false && doorClosed == false) {
+				
+				context.textAlign = "center";
+				clickDoor.draw(context);
+				
+			}
+			
+			//Draws "Snowball fight!" dialogue, but only for 2 seconds
+			
+			if (door == true && doorClosed == false) {
+			
+				speechDoor.shout(context);
+				setTimeout(function() {
+				
+					cue1 = true;
+					
+				}, 3500);
+				
+			}
+			
+			//Draws both pieces of the "father" snowman's dialogue, one after the other
+			
+			if (cue1 == true) {
+				
+				dialogue1.speak(context);
+				setTimeout(function() {
+				
+					cue1 = false;
+					cue2 = true;
+					
+				}, 4000);
+				
+			}
+			
+			if (cue2 == true) {
+			
+				dialogue2line1.speak(context);
+				dialogue2line2.speak(context);
+				setTimeout(function() {
+				
+					cue2 = false;
+					snowmanReady = true;
+					
+				}, 4000);
+			
+			}
+			
+			//Arms the snowman click event
+			
+			if (snowmanReady == true && snowman == false) {
+			
+				clickSnowman.draw(context);
+				
+			}
+			
+			//Press dialogue
+			
+			if (cue3 == true) {
+			
+				context.textAlign = "right";			
+				press1.speak(context);
+				setTimeout(function() {
+				
+					carDoor.play();
+					cue3 = false;
+					cue4 = true;
+					
+				}, 5000);
+				
+			}
+			
+			if (cue4 == true) {
+			
+				press2line1.speak(context);
+				press2line2.speak(context);
+				setTimeout(function() {
+				
+					engineSound.play();
+					cue4 = false;
+					engine = true;
+					
+				}, 5000);
+				
+			}
+			
+			//End salutations
+			
+			if (fin == true) {
+			
+				context.textAlign = "center";			
+				message.grow(context);
+				setTimeout(function() {
+					
+					signed = true;
+					
+				}, 2000);
+				
+			}
+			
+			if (signed == true) {
+			
+				signature.grow(context);
+				
+			}
+			
+		}
+
+		requestAnimationFrame (animateMe);
+	}
+	
+	canvas = getCanvas();
+	context = canvas.getContext ("2d");
+	
+	
+	
+	//EVENT HANDLING
+	
+	//Audio looping
+	
+	ambience.addEventListener("ended", function() {
+		this.currentTime = 0;
+		this.play();
+		}, false);
+		
+	music.addEventListener("ended", function() {
+		this.currentTime = 0;
+		this.play();
+		}, false);
+		
+	ambience.play();
+		
+	//Click events
+		
+	window.addEventListener("mousedown", click, false);
+	
+	function click() {
+	
+		//Door event
+	
+		if (door == false && doorReady == true && event.x > 240 && event.x < 260 && event.y > 418 && event.y < 450) {
+			
+			door = true;
+			snowMotion = true;
+			setTimeout(function() {
+				doorClosed = true
+				
+			}, 2000);
+			
+			ambience.pause();
+			doorSound.play();
+			music.play();
+			footsteps.play();
+			
+		}
+		
+		//Snowman event
+		
+		if (snowman == false && snowmanReady == true && event.x > 298 && event.x < 364 && event.y > 230 && event.y < 296) {
+		
+			snowman = true;
+			snowballSound.play();
+			setTimeout(function() {
+
+				dead = true;
+				music.pause();
+				deathSound.play();
+					
+			}, 1000);
+			
+		}
+		
+		//Ending
+		
+		deathSound.addEventListener("ended", function() {
+			
+			night = true;
+			foreLights = true;
+			cue3 = true;
+			journalist.play();
+			nightMusic.play();
+			
+		}, false);
+
+	}
+	
+	
+	
+	//INITIAL SETUP
+
+	init();
+
+	function init() {
+	
+		var horizon = canvas.height - 50;
+
+		//Trees
+
+		trees();
+
+		function trees() {
+
+			foreTrees = new Array();
+			var count;
+			backTrees = new Array();
+
+			//Foreground
+
+			for (count = 0; count < 4; count++) {
+
+				foreTree = new Tree("img/tree/fore.png",
+				Math.random() * canvas.width, horizon,
+				0.5 + Math.random() / 2);
+
+				foreTrees[count] = foreTree;
+
+			}
+
+			//Background
+
+			for (count = 0; count < 8; count++) {
+
+				backTree = new Tree("img/tree/back.png",
+				Math.random() * canvas.width, horizon,
+				0.25 + Math.random() / 4);
+
+				backTrees[count] = backTree;
+			}
+
+		}
+		
+		//House
+		
+		houses();
+		
+		function houses() {
+		
+			house = new House(250, horizon)
+			
+		}
+		
+		//Snowmen
+		
+		snowmen();
+		
+		function snowmen() {
+		
+			parent = new Snowman(
+			245, horizon,
+			1,
+			-4, -8,
+			"parent");
+			
+			child = new Snowman(
+			245, horizon,
+			1,
+			4, -8,
+			"child");
+			
+			police = new Snowman(
+			-32, horizon,
+			1,
+			4, -8,
+			"police");
+			
+		}
+		
+		//Snowflakes
+
+		snowflakes();
+
+		function snowflakes() {
+
+			flakes = new Array();
+			rad = new Array();
+			var count;
+
+			//Radius
+
+			rad[0] = 3;
+
+			for (count = 1; count < 10; count++) {
+
+				rad[count] = rad[count - 1] + 0.5;
+
+			}
+
+			for (count = 0; count < 10; count++) {
+
+				//Velocity
+
+				vey = 0.3 * rad[count];
+
+				//Acceleration
+
+				if (rad[count] < 5) {accel = 3}
+				else {accel = 2}
+
+				bin = Math.floor(Math.random()* 2);
+
+				if (bin == 0) {accel = accel * 0.01}
+				else {accel = accel * -0.01}
+
+				//Definition
+
+				flake = new Snowflake(
+				Math.random() * 350 + 75,
+				Math.random() * canvas.height,
+				rad[count],
+				Math.random() * 4 - 2,
+				vey, accel);
+
+				flakes[count] = flake;
+
+			}
+
+		}
+		
+		//Snowball
+		
+		snowball();
+		
+		function snowball() {
+		
+			ball = new Snowball(200, canvas.height + 50, 50, 2, -20, 0.5)
+			
+		}
+		
+		//Death Scene
+		
+		deathScene();
+		
+		function deathScene() {
+		
+			death = new Death("img/snowman/parent/head.png", -80, -256, 1, 0.5, 0.0125);
+			
+		}
+		
+		//Vehicles
+		
+		vehicles();
+		
+		function vehicles() {
+		
+			car = new Car(0, 386, 0);
+			
+		}
+		
+		//Lights
+		
+		lights();
+		
+		function lights() {
+		
+			foreLight = new Light("img/light/fore.png");
+			midLight = new Light("img/light/mid.png");
+			backLight = new Light("img/light/back.png");
+		}
+		
+		//Text
+		
+		text();
+		
+		function text() {
+		
+			//Salutations
+		
+			to = new Salutation(-250, 50, 4, 0, -0.03125, 0, 0, "#000040", "Dear User...");
+			message = new Salutation(250, 300, 0, 1, 0, -0.0078125, 0, "#ff0040", "Merry Christmas.");
+			signature = new Salutation(250, 485, 0, 1, 0, -0.015625, 0, "#ff0040", "From Adam");
+			
+			//Instructions
+			
+			clickDoor = new Instruction(250, 330, 0, 1.25, -0.03125, "CLICK ON THE DOOR");
+			clickSnowman = new Instruction (320, 200, 0, 1.25, -0.03125, "CLICK ON YOUR DEAR OLD DAD'S HEAD")
+			
+			//Speech
+			
+			speechDoor = new Speech(250, 300, 48, "#000040", "Snowball fight!");
+			dialogue1 = new Speech(320, 200, 20, "#000040", "Hiding, eh? You're a crafty one, son.");
+			dialogue2line1 = new Speech(320, 175, 20, "#000040", "Bet that doesn't extend to your aim,");
+			dialogue2line2 = new Speech(320, 200, 20, "#000040", "though! Come on, have at you!");
+			
+			press1 = new Speech(475, 300, 14, "white", "...and a human mind as bent as a bad hedge.")
+			press2line1 = new Speech(475, 280, 14, "white", "The local coroner called it the worst")
+			press2line2 = new Speech(475, 300, 14, "white", "case of decapitation he'd ever seen...")
+			
+		}
+
+		animateMe();
+	
+	}
+
+}
+
+</script>
+
+</body>
+
+</html>
